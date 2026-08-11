@@ -3,107 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Washim Rabbani - Holographic Command Center</title>
+    <title>Washim Rabbani - 3D Journey</title>
     <style>
+        /* 
+           Crucial for scroll-driven: We make the body very tall so the user can scroll,
+           but we fix the 3D canvases to the viewport so they act as a window into the 3D world.
+        */
         body {
             margin: 0;
-            overflow: hidden;
-            background-color: #010a15; /* Deep cyber blue */
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            padding: 0;
+            background-color: #03080e;
+            color: white;
+            font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+            overflow-x: hidden;
+            height: 6000px; /* Forces a long scrollbar */
         }
-        
+
         #webgl-container, #css-container {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-        }
-        
-        #css-container { pointer-events: none; }
-        .holo-panel-wrapper { pointer-events: auto; }
-
-        /* Holographic Glass Panel Styling */
-        .holo-panel {
-            background: linear-gradient(135deg, rgba(0, 168, 255, 0.1) 0%, rgba(0, 168, 255, 0.05) 100%);
-            border: 1px solid rgba(0, 229, 255, 0.4);
-            border-top: 4px solid rgba(0, 229, 255, 0.8);
-            border-radius: 15px;
-            color: #e0f7fa;
-            box-shadow: 0 0 30px rgba(0, 229, 255, 0.15), inset 0 0 20px rgba(0, 229, 255, 0.05);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            padding: 35px;
-            box-sizing: border-box;
-            overflow-y: auto;
-            position: relative;
+            z-index: -1; /* Keep it behind everything */
         }
 
-        /* Decorative corners */
-        .holo-panel::before, .holo-panel::after {
-            content: '';
-            position: absolute;
-            width: 20px; height: 20px;
-            border: 2px solid rgba(213, 0, 249, 0.8);
-            pointer-events: none;
+        #css-container {
+            pointer-events: none; /* Let scroll events pass through */
         }
-        .holo-panel::before { top: 10px; left: 10px; border-right: none; border-bottom: none; }
-        .holo-panel::after { bottom: 10px; right: 10px; border-left: none; border-top: none; }
+        
+        /* The CSS3D Cards */
+        .glass-panel {
+            width: 450px;
+            background: rgba(4, 18, 30, 0.7);
+            border-left: 4px solid #00ffcc;
+            border-right: 1px solid rgba(0, 255, 204, 0.3);
+            border-top: 1px solid rgba(0, 255, 204, 0.3);
+            border-bottom: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 0 20px rgba(0, 255, 204, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #d0e5ea;
+            pointer-events: auto; /* Allow text selection inside cards */
+        }
 
-        /* Scrollbar */
-        .holo-panel::-webkit-scrollbar { width: 8px; }
-        .holo-panel::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
-        .holo-panel::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.5); border-radius: 4px; }
-        .holo-panel::-webkit-scrollbar-thumb:hover { background: rgba(0, 229, 255, 0.8); }
-
-        h1, h2, h3 { font-weight: 300; letter-spacing: 1px; margin-top: 0; }
-        h1 { font-size: 2.8rem; color: #ffffff; text-shadow: 0 0 10px rgba(255,255,255,0.5); margin-bottom: 5px; }
-        h2 { 
-            color: #00e5ff; 
-            font-size: 1.5rem;
-            border-bottom: 1px solid rgba(0, 229, 255, 0.3); 
-            padding-bottom: 10px; 
-            margin-top: 25px; 
-            text-transform: uppercase;
-        }
+        h1 { color: #ffffff; font-size: 2.5rem; margin-top: 0; letter-spacing: 2px; }
+        h2 { color: #00ffcc; font-size: 1.5rem; text-transform: uppercase; border-bottom: 1px solid rgba(0,255,204,0.3); padding-bottom: 10px; }
+        h3 { color: #fff; font-size: 1.2rem; margin-bottom: 5px; }
         
-        .role { color: #d500f9; font-size: 1.3rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
+        .accent { color: #00ffcc; }
+        .date { color: #88aadd; font-size: 0.9rem; font-family: monospace; display: block; margin-bottom: 15px; }
         
-        .timeline-item { margin-bottom: 25px; position: relative; padding-left: 20px; border-left: 2px solid rgba(213, 0, 249, 0.5); }
-        .timeline-item::before {
-            content: ''; position: absolute; left: -6px; top: 5px;
-            width: 10px; height: 10px; border-radius: 50%; background: #d500f9;
-            box-shadow: 0 0 10px #d500f9;
-        }
-        
-        .job-title { color: #ffffff; font-size: 1.2rem; font-weight: 600; }
-        .company { color: #00e5ff; font-weight: 500; }
-        .date { color: rgba(224, 247, 250, 0.6); font-size: 0.9rem; margin-bottom: 10px; display: inline-block; }
-        
-        ul { padding-left: 20px; line-height: 1.7; color: rgba(224, 247, 250, 0.9); }
+        p { line-height: 1.6; font-size: 1.05rem; }
+        ul { padding-left: 20px; line-height: 1.6; }
         li { margin-bottom: 10px; }
 
-        .tag-cloud { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
         .tag {
-            background: rgba(0, 229, 255, 0.1);
-            border: 1px solid rgba(0, 229, 255, 0.3);
-            padding: 6px 14px;
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid rgba(0, 255, 204, 0.4);
+            color: #00ffcc;
+            padding: 5px 12px;
             border-radius: 4px;
             font-size: 0.85rem;
-            color: #00e5ff;
+            font-family: monospace;
         }
 
-        #instructions {
+        /* Overlay UI */
+        #scroll-instruction {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0.8;
+            transition: opacity 0.5s;
+        }
+        
+        .mouse {
+            width: 30px; height: 50px;
+            border: 2px solid #00ffcc;
+            border-radius: 15px;
+            position: relative;
+        }
+        .wheel {
+            width: 4px; height: 10px;
+            background: #00ffcc;
+            border-radius: 2px;
             position: absolute;
-            bottom: 25px;
-            width: 100%;
-            text-align: center;
-            color: rgba(0, 229, 255, 0.6);
-            font-family: monospace;
+            top: 8px; left: 50%;
+            transform: translateX(-50%);
+            animation: scroll 1.5s infinite;
+        }
+        @keyframes scroll {
+            0% { top: 8px; opacity: 1; }
+            100% { top: 25px; opacity: 0; }
+        }
+        
+        #progress-bar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 4px;
+            background: #00ffcc;
+            width: 0%;
             z-index: 100;
-            pointer-events: none;
-            letter-spacing: 2px;
-            text-transform: uppercase;
+            box-shadow: 0 0 10px #00ffcc;
         }
     </style>
 
@@ -117,243 +125,198 @@
     </script>
 </head>
 <body>
-    <div id="instructions">[ SYSTEM ACTIVE : CLICK & DRAG TO ROTATE SCENE • SCROLL MOUSE INSIDE PANELS ]</div>
+    <div id="progress-bar"></div>
+    <div id="scroll-instruction">
+        <div class="mouse"><div class="wheel"></div></div>
+        <p style="margin-top: 15px; font-family: monospace; color:#00ffcc;">SCROLL TO INITIATE SEQUENCE</p>
+    </div>
+
     <div id="webgl-container"></div>
     <div id="css-container"></div>
 
     <script type="module">
         import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 
-        // 1. Setup Scene
+        // 1. Setup Scene & Camera
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x010a15, 0.0006);
+        scene.fog = new THREE.FogExp2(0x03080e, 0.0003); // Fog hides distant objects naturally
         
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 5000);
-        camera.position.set(0, 200, 1600);
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 6000);
+        
+        // Define journey start and end depths
+        const startZ = 800;
+        const endZ = -4500;
+        camera.position.set(0, 0, startZ);
 
         // 2. Renderers
         const webglRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         webglRenderer.setSize(window.innerWidth, window.innerHeight);
-        webglRenderer.setPixelRatio(window.devicePixelRatio);
         document.getElementById('webgl-container').appendChild(webglRenderer.domElement);
 
         const cssRenderer = new CSS3DRenderer();
         cssRenderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('css-container').appendChild(cssRenderer.domElement);
 
-        const controls = new OrbitControls(camera, cssRenderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.maxDistance = 2500;
-        controls.minDistance = 600;
-
-        // 3. 3D Environment (Cyber Platform)
+        // 3. Build the WebGL Environment (Cyber Tunnel)
         
-        // Floor Ring
-        const ringGeo = new THREE.RingGeometry(600, 850, 64);
-        const ringMat = new THREE.MeshBasicMaterial({ 
-            color: 0x00e5ff, 
-            wireframe: true, 
-            transparent: true, 
-            opacity: 0.15,
-            side: THREE.DoubleSide
-        });
-        const floorRing = new THREE.Mesh(ringGeo, ringMat);
-        floorRing.rotation.x = -Math.PI / 2;
-        floorRing.position.y = -350;
-        scene.add(floorRing);
-
-        // Inner glowing core
-        const coreGeo = new THREE.CylinderGeometry(590, 590, 10, 64);
-        const coreMat = new THREE.MeshBasicMaterial({ color: 0x011122 });
-        const core = new THREE.Mesh(coreGeo, coreMat);
-        core.position.y = -355;
-        scene.add(core);
-
-        const neonEdgeGeo = new THREE.TorusGeometry(590, 4, 32, 100);
-        const neonEdgeMat = new THREE.MeshBasicMaterial({ color: 0xd500f9 });
-        const neonEdge = new THREE.Mesh(neonEdgeGeo, neonEdgeMat);
-        neonEdge.rotation.x = Math.PI / 2;
-        neonEdge.position.y = -350;
-        scene.add(neonEdge);
-
-        // Floating Data Particles
+        // Data particles flowing through the tunnel
         const particlesGeo = new THREE.BufferGeometry();
-        const particleCount = 1500;
+        const particleCount = 3000;
         const posArray = new Float32Array(particleCount * 3);
-        for(let i = 0; i < particleCount * 3; i++) {
-            posArray[i] = (Math.random() - 0.5) * 3000;
+        
+        for(let i = 0; i < particleCount * 3; i+=3) {
+            posArray[i] = (Math.random() - 0.5) * 2000;     // X spread
+            posArray[i+1] = (Math.random() - 0.5) * 2000;   // Y spread
+            posArray[i+2] = (Math.random() * 6000) - 5000;  // Z spread (along the path)
         }
         particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        const particleMat = new THREE.PointsMaterial({
-            size: 2,
-            color: 0x00e5ff,
-            transparent: true,
-            opacity: 0.4,
-            blending: THREE.AdditiveBlending
-        });
+        const particleMat = new THREE.PointsMaterial({ size: 3, color: 0x00ffcc, transparent: true, opacity: 0.6 });
         const particlesMesh = new THREE.Points(particlesGeo, particleMat);
         scene.add(particlesMesh);
 
-        // 4. Hologram Generator Function
-        function createHoloPanel(htmlContent, width, height, position, rotation) {
-            const element = document.createElement('div');
-            element.className = 'holo-panel-wrapper';
-            
-            const panel = document.createElement('div');
-            panel.className = 'holo-panel';
-            panel.style.width = width + 'px';
-            panel.style.height = height + 'px';
-            panel.innerHTML = htmlContent;
-            
-            element.appendChild(panel);
-
-            const cssObject = new CSS3DObject(element);
-            cssObject.position.set(position.x, position.y, position.z);
-            cssObject.rotation.set(rotation.x, rotation.y, rotation.z);
-            scene.add(cssObject);
-
-            // WebGL occluder
-            const material = new THREE.MeshBasicMaterial({ color: 0x000000, colorWrite: false });
-            const geometry = new THREE.PlaneGeometry(width, height);
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.position.copy(cssObject.position);
-            mesh.rotation.copy(cssObject.rotation);
-            scene.add(mesh);
-            
-            return cssObject;
+        // Decorative Tunnel Rings spaced out along the Z-axis
+        const ringGeo = new THREE.TorusGeometry(800, 2, 16, 100);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x113344, transparent: true, opacity: 0.3 });
+        
+        for(let z = 0; z > -5000; z -= 500) {
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.position.z = z;
+            scene.add(ring);
         }
 
-        // 5. Inject Content into 3 Holographic Screens
+        // 4. Create CSS3D Panels placed along the Z-axis path
+        function addPanel(html, x, y, z, rotY = 0) {
+            const el = document.createElement('div');
+            el.className = 'glass-panel';
+            el.innerHTML = html;
 
-        // CENTER SCREEN: Experience & Impact
-        const expContent = `
-            <h2>EXPERIENCE LOG</h2>
-            
-            <div class="timeline-item">
-                <div class="job-title">Security Analyst</div>
-                <div class="company">Google IT Services India Pvt Ltd</div>
-                <div class="date">Jul 2024 – Present | Hyderabad, India</div>
-                <ul>
-                    <li>Design and deploy autonomous security agents and agentic workflows to automate the triage, classification, and routing of high-volume security incidents.</li>
-                    <li>Leverage Large Language Models (LLMs) and intelligent decision frameworks to map automated triage actions directly to incident response playbooks.</li>
-                    <li>Conduct comprehensive security reviews to ensure stringent compliance with enterprise standards.</li>
-                </ul>
-            </div>
+            const cssObj = new CSS3DObject(el);
+            cssObj.position.set(x, y, z);
+            cssObj.rotation.y = rotY;
+            scene.add(cssObj);
+        }
 
-            <div class="timeline-item">
-                <div class="job-title">Information Security Analyst</div>
-                <div class="company">LIFARS, LLC (Security Scorecard)</div>
-                <div class="date">Feb 2022 – Jul 2024 | Remote</div>
-                <ul>
-                    <li>Monitored leading EDRs (Carbon Black, CrowdStrike, SentinelOne) for proactive threat detection.</li>
-                    <li>Developed Python scripts to automate security tasks and enhance intelligence gathering.</li>
-                    <li>Executed proactive threat hunting operations to identify concealed intrusions.</li>
-                </ul>
-            </div>
-
-            <div class="timeline-item">
-                <div class="job-title">Senior Cyber Security Analyst</div>
-                <div class="company">Network Intelligence India Pvt. Ltd.</div>
-                <div class="date">Jul 2018 – Aug 2021 | Mumbai, India</div>
-                <ul>
-                    <li>Coordinated with SOC and Threat Hunting teams to investigate incidents and banking application alerts.</li>
-                    <li>Integrated IOCs and advisories from multiple threat intelligence partners.</li>
-                </ul>
-            </div>
-        `;
-        createHoloPanel(expContent, 750, 700, {x: 0, y: 50, z: -250}, {x: 0, y: 0, z: 0});
-
-        // LEFT SCREEN: Identity & Summary
-        const identityContent = `
+        // --- Panel 1: Identity (z = 0) ---
+        addPanel(`
             <h1>WASHIM RABBANI</h1>
-            <div class="role">Security Analyst</div>
-            <p style="color: rgba(224,247,250,0.7); margin-top: 15px;">
-                Coochbehar / Hyderabad, IN<br>
-                washim.rabbani@gmail.com<br>
-                linkedin.com/in/washimrabbani
+            <h3 class="accent">Security Analyst @ Google</h3>
+            <p><strong>Location:</strong> Hyderabad, IN / West Bengal</p>
+            <p><strong>Email:</strong> washim.rabbani@gmail.com</p>
+            <p><strong>LinkedIn:</strong> /in/washimrabbani</p>
+            <p style="margin-top:20px; color:#88aadd; font-family:monospace;">
+                > System Access Granted<br>> Initiating Secure Profile Protocol...
             </p>
-            
+        `, -300, 0, 0, Math.PI / 12);
+
+        // --- Panel 2: Summary (z = -1000) ---
+        addPanel(`
             <h2>EXECUTIVE SUMMARY</h2>
-            <p style="font-size: 1.05rem; line-height: 1.8; color: #fff;">
-                Results-driven Security Analyst with over 8 years of experience specializing in threat detection, incident response, and advanced security automation. 
-                <br><br>
-                Proven ability to leverage EDR solutions, build autonomous security agents, and optimize incident triage workflows. Adept at implementing robust defense strategies utilizing LLMs and scripting to safeguard enterprise environments.
-            </p>
-
-            <h2>CORE COMPETENCIES</h2>
-            <div class="tag-cloud">
-                <div class="tag">Security Reviews</div>
-                <div class="tag">Workflow Automation</div>
-                <div class="tag">Data Analysis</div>
-                <div class="tag">Proactive Threat Hunting</div>
+            <p>Results-driven Security Analyst with over 8 years of experience specializing in threat detection, incident response, and advanced security automation.</p>
+            <p>Proven ability to leverage EDR solutions, build autonomous security agents, and optimize incident triage workflows to safeguard enterprise environments.</p>
+            <div class="tags">
+                <span class="tag">EDR/XDR</span>
+                <span class="tag">Agentic Workflows</span>
+                <span class="tag">LLM Integration</span>
             </div>
-        `;
-        createHoloPanel(identityContent, 550, 700, {x: -720, y: 50, z: 150}, {x: 0, y: Math.PI / 4, z: 0});
+        `, 350, 50, -1000, -Math.PI / 12);
 
-        // RIGHT SCREEN: Technical Arsenal & Education
-        const techContent = `
-            <h2>TECHNICAL ARSENAL</h2>
-            <div class="tag-cloud">
-                <div class="tag">CrowdStrike Falcon</div>
-                <div class="tag">SentinelOne</div>
-                <div class="tag">Carbon Black</div>
-                <div class="tag">Sumo Logic</div>
-                <div class="tag">Python Automation</div>
-                <div class="tag">Agentic Workflows</div>
-                <div class="tag">KAPE</div>
-                <div class="tag">Malware Analysis</div>
-                <div class="tag">EnCase</div>
+        // --- Panel 3: Current Experience (z = -2000) ---
+        addPanel(`
+            <h2>EXPERIENCE: GOOGLE</h2>
+            <h3>Security Analyst</h3>
+            <span class="date">Jul 2024 – Present | Google IT Services India</span>
+            <ul>
+                <li>Conduct comprehensive security reviews to ensure stringent compliance with enterprise standards.</li>
+                <li>Design and deploy autonomous security agents and workflows to automate the triage, classification, and routing of high-volume security incidents.</li>
+                <li>Leverage Large Language Models (LLMs) and intelligent decision frameworks to map automated triage actions directly to incident response playbooks.</li>
+            </ul>
+        `, -400, -50, -2000, Math.PI / 16);
+
+        // --- Panel 4: Past Experience (z = -3000) ---
+        addPanel(`
+            <h2>EXPERIENCE: LIFARS / SCORECARD</h2>
+            <h3>Information Security Analyst</h3>
+            <span class="date">Aug 2021 – Jul 2024 | Remote</span>
+            <ul>
+                <li>Monitored leading EDRs (Carbon Black, CrowdStrike, SentinelOne) for proactive threat detection.</li>
+                <li>Performed digital forensic analysis of security incidents, identifying root causes and impact.</li>
+                <li>Developed Python scripts to automate security tasks and enhance intelligence gathering.</li>
+                <li>Executed proactive threat hunting operations.</li>
+            </ul>
+        `, 400, 50, -3000, -Math.PI / 16);
+
+        // --- Panel 5: Projects & Skills (z = -4000) ---
+        addPanel(`
+            <h2>ARSENAL & PROJECTS</h2>
+            <h3>Digital Content Project (Cybersecurity)</h3>
+            <p>Designed structured AI prompts to generate video stories and technical icon grids visualizing network security elements.</p>
+            
+            <h3 style="margin-top:20px;">Certifications & Education</h3>
+            <ul>
+                <li>Kroll Artifact Parser and Extractor (KAPE) Certified</li>
+                <li>MTech, Cyber Security & Incident Response (GFSU)</li>
+            </ul>
+            
+            <div class="tags">
+                <span class="tag">Python</span>
+                <span class="tag">Digital Forensics</span>
+                <span class="tag">Sumo Logic</span>
+                <span class="tag">ArcSight</span>
+                <span class="tag">Malware Analysis</span>
             </div>
+        `, -300, 0, -4000, Math.PI / 12);
 
-            <h2>PROJECTS</h2>
-            <div class="timeline-item" style="margin-top:15px; margin-bottom:15px;">
-                <div class="job-title">Digital Content & Visualization</div>
-                <p style="margin-top:5px; font-size:0.95rem;">Designed structured AI prompts to generate a four-part video story and technical icon grids visualizing complex network security concepts for educational outreach.</p>
-            </div>
+        // 5. Scroll Logic & Animation
+        
+        let targetScroll = 0;
+        let currentScroll = 0;
+        const progressBar = document.getElementById('progress-bar');
+        const scrollInstruction = document.getElementById('scroll-instruction');
 
-            <h2>EDUCATION</h2>
-            <p><strong>MTech in Cyber Security and Incident Response</strong><br>
-            <span class="date">Gujarat Forensic Sciences University (2018)</span></p>
-            
-            <p><strong>MSc in Computer and Information Sciences</strong><br>
-            <span class="date">West Bengal University of Technology (2015)</span></p>
-            
-            <h2>CERTIFICATIONS</h2>
-            <p><strong>Kroll Artifact Parser and Extractor (KAPE)</strong><br>
-            <span class="date">Proficiency Exam (Active through 2025)</span></p>
-        `;
-        createHoloPanel(techContent, 550, 700, {x: 720, y: 50, z: 150}, {x: 0, y: -Math.PI / 4, z: 0});
+        window.addEventListener('scroll', () => {
+            // Hide instruction once scrolling starts
+            if(window.scrollY > 50) scrollInstruction.style.opacity = '0';
+            else scrollInstruction.style.opacity = '0.8';
 
-        // 6. Animation Loop
-        const clock = new THREE.Clock();
+            // Calculate percentage of scroll (0 to 1)
+            const maxScroll = document.body.scrollHeight - window.innerHeight;
+            targetScroll = window.scrollY / maxScroll;
+        });
 
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            
-            const elapsedTime = clock.getElapsedTime();
-            
-            // Subtle floating effect for particles and rings
-            particlesMesh.rotation.y = elapsedTime * 0.02;
-            floorRing.rotation.z = elapsedTime * 0.05;
-            
-            // Pulse the neon edge
-            const pulse = (Math.sin(elapsedTime * 2) + 1) / 2;
-            neonEdge.scale.set(1 + pulse*0.02, 1 + pulse*0.02, 1);
-
-            webglRenderer.render(scene, camera);
-            cssRenderer.render(scene, camera);
-        }
-
+        // Handle Window Resize
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             webglRenderer.setSize(window.innerWidth, window.innerHeight);
             cssRenderer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Smoothly interpolate current scroll toward target scroll (easing)
+            currentScroll += (targetScroll - currentScroll) * 0.05;
+            
+            // Update progress bar
+            progressBar.style.width = (currentScroll * 100) + '%';
+
+            // Map the scroll percentage to the camera's Z position
+            // Start at startZ (800) and move to endZ (-4500)
+            const travelDistance = endZ - startZ;
+            camera.position.z = startZ + (currentScroll * travelDistance);
+
+            // Add a cinematic slight rotation to the camera as it moves
+            camera.rotation.z = currentScroll * Math.PI * 0.25; // Slight tilt
+            camera.position.x = Math.sin(currentScroll * Math.PI * 2) * 150; // Slight wave motion
+            camera.position.y = Math.cos(currentScroll * Math.PI * 2) * 50;
+
+            // Rotate particles slowly to make the tunnel feel "alive"
+            particlesMesh.rotation.z += 0.0005;
+
+            webglRenderer.render(scene, camera);
+            cssRenderer.render(scene, camera);
+        }
 
         animate();
     </script>
