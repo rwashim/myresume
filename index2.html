@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Washim Rabbani - 3D Resume</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050505;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* 3D Glassmorphism Card Styles */
+        .card {
+            width: 400px;
+            background: rgba(10, 25, 30, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            color: #e0e0e0;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(0, 255, 204, 0.1);
+            transition: border 0.3s ease;
+            cursor: default;
+        }
+
+        .card:hover {
+            border: 1px solid rgba(0, 255, 204, 0.8);
+        }
+
+        .title {
+            color: #00ffcc;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 255, 204, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .highlight {
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        p { margin: 8px 0; font-size: 0.95rem; line-height: 1.5; }
+        
+        .timeline { list-style: none; padding: 0; }
+        .timeline li { margin-bottom: 15px; padding-left: 15px; border-left: 2px solid #00ffcc; }
+        .timeline .date { font-size: 0.8rem; color: #00ffcc; opacity: 0.8; }
+
+        .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+        .badges span {
+            background: rgba(0, 255, 204, 0.15);
+            border: 1px solid rgba(0, 255, 204, 0.4);
+            color: #00ffcc;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: rgba(0, 255, 204, 0.6);
+            pointer-events: none;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            z-index: 100;
+        }
+    </style>
+
+    <!-- Import modern Three.js modules via CDN -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="instructions">Left Click + Drag to Rotate • Scroll to Zoom</div>
+    <div id="canvas-container"></div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+
+        // 1. Setup Scene, Cameras, and Renderers
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 5000);
+        camera.position.set(0, 0, 1200);
+
+        // WebGL Renderer (For background grid/particles)
+        const webglRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        webglRenderer.setSize(window.innerWidth, window.innerHeight);
+        webglRenderer.domElement.style.position = 'absolute';
+        webglRenderer.domElement.style.top = 0;
+        document.getElementById('canvas-container').appendChild(webglRenderer.domElement);
+
+        // CSS3D Renderer (For the HTML Cards)
+        const cssRenderer = new CSS3DRenderer();
+        cssRenderer.setSize(window.innerWidth, window.innerHeight);
+        cssRenderer.domElement.style.position = 'absolute';
+        cssRenderer.domElement.style.top = 0;
+        document.getElementById('canvas-container').appendChild(cssRenderer.domElement);
+
+        // Controls (Orbit)
+        const controls = new OrbitControls(camera, cssRenderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxDistance = 2500;
+        controls.minDistance = 500;
+
+        // 2. Add Background Environment (Cyber Grid)
+        const gridHelper = new THREE.GridHelper(3000, 60, 0x00ffcc, 0x0a2a22);
+        gridHelper.position.y = -400;
+        scene.add(gridHelper);
+
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 1000;
+        const posArray = new Float32Array(particlesCount * 3);
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 3000;
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const material = new THREE.PointsMaterial({ size: 3, color: 0x00ffcc, transparent: true, opacity: 0.4 });
+        const particlesMesh = new THREE.Points(particlesGeometry, material);
+        scene.add(particlesMesh);
+
+        // 3. Create HTML Cards content
+        const cardData = [
+            {
+                html: `
+                    <h2 class="title">WASHIM RABBANI</h2>
+                    <div class="highlight">Security Analyst @ Google</div>
+                    <p>✉️ washim.rabbani@gmail.com</p>
+                    <p>📍 Hyderabad, IN / West Bengal</p>
+                    <p>🔗 linkedin.com/in/washimrabbani</p>
+                `,
+                pos: [0, 150, 200], rot: [0, 0, 0]
+            },
+            {
+                html: `
+                    <h2 class="title">SUMMARY</h2>
+                    <p>Results-driven Security Analyst with 8+ years of experience specializing in threat detection, incident response, and advanced security automation. Proven ability to leverage EDR solutions and build autonomous security agents to optimize incident triage workflows.</p>
+                `,
+                pos: [-500, 0, 0], rot: [0, Math.PI / 6, 0]
+            },
+            {
+                html: `
+                    <h2 class="title">EXPERIENCE</h2>
+                    <ul class="timeline">
+                        <li>
+                            <strong>Google IT Services</strong> - Security Analyst<br>
+                            <span class="date">Jul 2024 – Present</span>
+                        </li>
+                        <li>
+                            <strong>LIFARS</strong> - InfoSec Analyst<br>
+                            <span class="date">Feb 2022 – Jul 2024</span>
+                        </li>
+                        <li>
+                            <strong>Network Intelligence</strong> - Sr. Security Analyst<br>
+                            <span class="date">Jul 2018 – Aug 2021</span>
+                        </li>
+                    </ul>
+                `,
+                pos: [500, 0, 0], rot: [0, -Math.PI / 6, 0]
+            },
+            {
+                html: `
+                    <h2 class="title">SKILLS & TOOLS</h2>
+                    <div class="badges">
+                        <span>EDR/XDR</span>
+                        <span>CrowdStrike</span>
+                        <span>Python</span>
+                        <span>Digital Forensics</span>
+                        <span>Sumo Logic</span>
+                        <span>Incident Response</span>
+                        <span>Agentic Workflows</span>
+                    </div>
+                `,
+                pos: [0, -250, 100], rot: [-Math.PI / 12, 0, 0]
+            }
+        ];
+
+        // 4. Inject Cards into the 3D Scene
+        cardData.forEach(data => {
+            const element = document.createElement('div');
+            element.className = 'card';
+            element.innerHTML = data.html;
+
+            const object = new CSS3DObject(element);
+            object.position.set(data.pos[0], data.pos[1], data.pos[2]);
+            object.rotation.set(data.rot[0], data.rot[1], data.rot[2]);
+            scene.add(object);
+        });
+
+        // 5. Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            
+            // Slowly rotate background particles
+            particlesMesh.rotation.y += 0.0005;
+            
+            webglRenderer.render(scene, camera);
+            cssRenderer.render(scene, camera);
+        }
+
+        // Handle Window Resize
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            webglRenderer.setSize(window.innerWidth, window.innerHeight);
+            cssRenderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
